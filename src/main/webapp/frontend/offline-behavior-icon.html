@@ -1,0 +1,40 @@
+<link rel="import" href="bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="bower_components/app-storage/app-network-status-behavior.html">
+
+<dom-module id="offline-behavior-icon">
+  <template>
+    <style>
+    :host {
+      display: block;
+    }
+    </style>
+    <iron-icon icon ="[[_getIcon(online, connection)]]"></iron-icon>
+  </template>
+  <script>
+    class OfflineBehaviorIcon extends Polymer.mixinBehaviors([Polymer.AppNetworkStatusBehavior], Polymer.Element) {
+      static get is() {
+        return 'offline-behavior-icon';
+      }
+      static get properties() {
+        return {
+          online: {
+            type: Boolean,
+            value: Polymer.AppNetworkStatusBehavior.properties.online
+          },
+          connection: {
+            type: Boolean,
+            value: true
+          }
+        }
+      }
+      _getIcon(online, connection) {
+        if (online && connection) {
+          return "icons:cloud";
+        } else {
+          return "icons:cloud-off";
+        }
+      }
+    }
+    customElements.define(OfflineBehaviorIcon.is, OfflineBehaviorIcon);
+  </script>
+</dom-module>

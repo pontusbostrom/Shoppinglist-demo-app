@@ -1,0 +1,146 @@
+<link rel="import" href="bower_components/polymer/polymer-element.html">
+<link rel="import" href="bower_components/paper-button/paper-button.html">
+<link rel="import" href="shopping-list.html">
+<link rel="import" href="shared-styles.html">
+
+
+<dom-module id="main-view">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        padding: 10px;
+      }
+    </style>
+
+    <template is="dom-repeat" items ={{lists}} observe="name">
+      <shopping-list list = "{{item.list}}" name="{{item.name}}"></shopping-list>
+    </template>
+  <paper-button on-click="_add">Add list</paper-button>
+  </template>
+  <script>
+    class MainView extends Polymer.Element {
+      static get is() {
+        return 'main-view';
+      }
+      static get properties() {
+        return {
+          sharingKey: {
+            type: String,
+            value: null
+          },
+          revision: {
+            type: String,
+            value: ""
+          },
+          lists: {
+            type: Array,
+            notify: true,
+            value: function() {
+              return [];
+            }
+          },
+          username: {
+            type: String
+          }
+        };
+      }
+
+      ready() {
+        super.ready();
+        this.lists = [];
+        this.addEventListener('listchanged', this._changed);
+        this.addEventListener('addremove', this._addremove);
+      }
+
+      _add(e) {
+        this.push("lists", {
+          name: "",
+          list: []
+        });
+        this._save();
+
+      }
+
+      _save() {
+        var data = {
+          _id: "0",
+          _rev: this.revision,
+          sharingKey: this.sharingKey,
+          lists: this.lists
+        };
+        var self = this;
+        this.localdb.put(data).then(v => {
+          console.log("Success");
+          self.revision = v.rev;
+          window.sendNotification(this.username, this.sharingKey);
+        }).catch(err => {
+          console.log("Error:" + err)
+        });
+      }
+
+      _updateFromDB() {
+        console.log("Update from db ");
+        var self = this;
+        this.localdb.allDocs({
+          include_docs: true
+        }).then(docs => {
+          console.log("Fetched " + docs.rows.length + " from db");
+          if (docs.rows.length > 0) {
+            self.revision = docs.rows[0].doc._rev;
+            var lists = docs.rows[0].doc.lists
+            self.lists = lists;
+          }
+        }).catch(e => {
+          console.log("Error when fetching" + e)
+        })
+      }
+
+      setupDB() {
+        if (!this.localdb) {
+          this.localdb = new PouchDB(this.sharingKey);
+        }
+        if (window.db) {
+          //TODO: cancel old syncs
+          var self = this;
+          this.localdb.sync(window.db, {
+            live: true,
+            retry: true
+          }).on("change", c => {
+            console.log("sync change");
+            self._updateFromDB();
+          }).on('paused', info => {
+            console.log("paused");
+          }).on('active', info => {
+            console.log("active");
+          }).on('error', err => {
+            console.log("sync error");
+          });
+          console.log("pouch set up")
+        } else {
+          this.localdb.changes({
+            since: 'now',
+            live: true
+          }).on('change', c => this._updateFromDB());
+        }
+        this._updateFromDB();
+      }
+
+      _changed() {
+        console.log("Lists Changed " + this.lists);
+        this._save();
+        if (this.$.xhr) {
+          this.$.xhr.generateRequest();
+        }
+      }
+
+      _addremove() {
+        console.log("Items added or removed " + this.lists);
+        this._save();
+      }
+
+    }
+
+    customElements.define(MainView.is, MainView);
+  </script>
+</dom-module>

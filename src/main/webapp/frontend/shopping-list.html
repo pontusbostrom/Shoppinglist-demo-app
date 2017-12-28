@@ -1,0 +1,120 @@
+<link rel="import" href="bower_components/polymer/polymer-element.html">
+<link rel="import" href="bower_components/vaadin-grid/all-imports.html">
+<link rel="import" href="bower_components/paper-icon-button/paper-icon-button.html"></link>
+<link rel="import" href="bower_components/iron-icons/iron-icons.html"></link>
+<link rel="import" href="bower_components/paper-checkbox/paper-checkbox.html"></link>
+<link rel="import" href="bower_components/paper-input/paper-input.html"></link>
+<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="shopping-list">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+    </style>
+
+    <div class="vertical">
+      <paper-input label="Store name" value="{{name}}" on-change="_changed"> </paper-input>
+      <vaadin-grid id="grid" items="{{list}}">
+        <vaadin-grid-column width="80px" flex-grow="0">
+          <template class="header">Handled </template>
+  <template>
+            <paper-checkbox value="{{item.handled}}" on-change="_changed"></paper-checkbox>
+          </template>
+  </vaadin-grid-column>
+  <vaadin-grid-column>
+    <template class="header">Product</template>
+    <template>
+            <paper-input value="{{item.product}}" on-change="_changed"></paper-input>
+          </template>
+  </vaadin-grid-column>
+  <vaadin-grid-column width="100px" flex-grow="0">
+    <template class="header">Amount</template>
+    <template>
+            <paper-input value="{{item.amount}}" on-change="_changed"></paper-input>
+          </template>
+  </vaadin-grid-column>
+  </vaadin-grid>
+  <div class="horizontal layout">
+    <paper-icon-button id="add" icon="add" on-tap="_addItem"> </paper-icon-button>
+    <paper-icon-button id="remove" icon="remove" on-tap="_removeItem"> </paper-icon-button>
+  </div>
+  </div>
+  </template>
+
+  <script>
+    class ShoppingList extends Polymer.Element {
+      static get is() {
+        return 'shopping-list';
+      }
+
+      static get properties() {
+        return {
+          name: {
+            type: String,
+            notify: true
+          },
+          list: {
+            type: Array,
+            notify: true,
+            value: function() {
+              return [];
+            }
+          }
+        };
+      }
+
+      ready() {
+        super.ready();
+        this.seqNum = 0;
+      }
+
+      _addItem() {
+        this.push('list', {
+          index: this.seqNum,
+          handled: false,
+          product: "",
+          amount: ""
+        });
+        this.dispatchEvent(new CustomEvent('addremove', {
+          bubbles: true,
+          composed: true,
+          detail: {
+            changed: true
+          }
+        }));
+      }
+
+      _removeItem() {
+        var index = this.list.indexOf(this.$.grid.activeItem);
+        this.items.splice("list", index, 1);
+        this.dispatchEvent(new CustomEvent('addremove', {
+          bubbles: true,
+          composed: true,
+          detail: {
+            changed: true
+          }
+        }));
+      }
+
+      _changed() {
+        //this.items =
+        console.log("Changed " + this.list);
+        this.dispatchEvent(new CustomEvent('listchanged', {
+          bubbles: true,
+          composed: true,
+          detail: {
+            changed: true
+          }
+        }));
+      }
+
+    }
+
+    window.customElements.define(ShoppingList.is, ShoppingList);
+  </script>
+</dom-module>

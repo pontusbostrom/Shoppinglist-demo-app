@@ -1,0 +1,126 @@
+
+<link rel="import" href="bower_components/polymer/polymer-element.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="bower_components/paper-input/paper-input.html">
+<link rel="import" href="bower_components/paper-button/paper-button.html">
+<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
+
+<dom-module id="login-view">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+      error-message
+    </style>
+
+    <iron-ajax
+      id="xhr"
+      handle-as="json"
+      on-response="_handleResponse"
+      content-type="application/json"
+      body="[[_requestParam(username)]]"
+      method="POST"
+      debounce-duration="300"></iron-ajax>
+    <div class="vertical layout">
+      <paper-input id="name" label="Username" name="username" required autofocus></paper-input>
+      <paper-input id="pass" label="Password" name="password" type="password" error-message="Invalid username or password" required></paper-input>
+        <div class="horizontal layout login">
+          <paper-button id="login-button" on-tap="_logIn" raised>Login</paper-button>
+          <paper-button id="skip-button" on-tap="_skip" raised>Continue offline</paper-button>
+        </div>
+    </div>
+  </template>
+
+  <script>
+    class LoginView extends Polymer.Element {
+      static get is() {
+        return 'login-view';
+      };
+
+      static get properties() {
+        return {
+          online: {
+            online: Boolean,
+            notify: true
+          },
+          sharingKey: {
+            type: String,
+            notify: true
+          },
+          username: {
+            type: String,
+            notify: true
+          }
+        };
+      }
+
+      ready() {
+        super.ready();
+        this.$.xhr.url = shoppinglist.properties.authEndpoint;
+      }
+
+      _requestParam(user) {
+        return {
+          username: user,
+          sharingKey: this.sharingKey
+        }
+      }
+
+      _logIn() {
+        var uname = this.$.name.value;
+        if (uname) {
+          this.username = this.$.name.value;
+          this.$.xhr.generateRequest();
+        }
+      }
+
+      _handleResponse() {
+        var name = this.username;
+        var pass = this.$.pass.value;
+        window.db = new PouchDB(shoppinglist.properties.couchEndpoint + this.sharingKey);
+        window.db.login(name, pass, (err, response) => {
+          if (err) {
+            if (err.name === 'unauthorized') {
+              this._handleLoginError()
+            } else {
+              this._handleLoginError()
+            }
+          } else {
+            this._handleLoginSuccess();
+          }
+
+        });
+      }
+      _handleLoginSuccess() {
+        this.$.pass.invalid = false;
+        this.dispatchEvent(new CustomEvent('login', {
+          bubbles: true,
+          composed: true,
+          detail: {
+            success: true,
+            offline: false
+          }
+        }));
+      }
+      _handleLoginError() {
+        this.$.pass.invalid = true;
+      }
+      _skip() {
+        this.$.pass.invalid = true;
+        this.dispatchEvent(new CustomEvent('login', {
+          bubbles: true,
+          composed: true,
+          detail: {
+            success: false,
+            offline: true
+          }
+        }));
+      }
+    }
+    window.customElements.define(LoginView.is, LoginView);
+  </script>
+</dom-module>

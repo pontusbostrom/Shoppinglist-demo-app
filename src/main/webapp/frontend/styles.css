@@ -1,0 +1,29 @@
+:root {
+	--app-primary-color: #4285f4;
+	--app-secondary-color: black;
+}
+
+a {
+	color: var(--app-secondary-color);
+	line-heigh: 40px;
+	margin: 20px;
+	font-family: 'Roboto', 'Noto', sans-serif;
+}
+
+.menu-header {
+	color: var(--app-secondary-color);
+	font-size: 20px;
+	line-height: 1.5;
+	margin: 20px;
+	font-family: 'Roboto', 'Noto', sans-serif;
+}
+
+.header {
+	background-color: var(--app-primary-color);
+	font-size: 20px;
+	line-height: 1.5;
+	color: #fff;
+	padding:20px;
+	width:100%;
+	font-family: 'Roboto', 'Noto', sans-serif;
+}

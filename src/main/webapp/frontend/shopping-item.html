@@ -1,0 +1,55 @@
+<link rel="import" href="bower_components/polymer/polymer-element.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="shopping-item">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+    </style>
+
+    <div class="horizontal layout">
+      <paper-checkbox value="{{handled}}" on-change="_changed"></paper-checkbox>
+    </div>
+  </template>
+
+  <script>
+    class MainView extends Polymer.Element {
+      static get is() {
+        return 'main-view';
+      }
+      static properties() {
+        return {
+          sharingKey: {
+            type: String,
+            value: ""
+          },
+          lists: {
+            type: Array,
+            value: function() {
+              return [];
+            }
+          }
+        };
+      }
+
+      ready() {
+        super.ready();
+        this.lists = [];
+      }
+
+      _add(e) {
+        this.push("lists", {
+          name: "",
+          list: []
+        });
+      }
+
+    }
+
+    customElements.define(MainView.is, MainView);
+  </script>
+</dom-module>
